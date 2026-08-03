@@ -1,0 +1,1090 @@
+<!--
+  ============================================================
+  CAUL Journal Title List — Embed Widget
+  ============================================================
+
+  SETUP INSTRUCTIONS
+  ------------------
+  1. Upload title_list.json to your media library
+     (any publicly accessible URL on your server).
+
+  2. Copy the full contents of this file.
+
+  3. In your website, edit the page where you want the list.
+     Add a "Custom HTML" block and paste everything in.
+
+  4. Update the DATA_URL constant below to point to your JSON file.
+     e.g. "https://yoursite.edu.au/content/uploads/2024/title_list.json"
+
+  5. Publish.
+
+  To update the list: re-run generate_title_list.py and overwrite
+  the JSON file on the server. The page needs no changes.
+  ============================================================
+-->
+
+<style>
+
+  @font-face {
+  font-family: "Arboria";
+  src: url("https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Assets/Fonts/Arboria-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  }
+  @font-face {
+    font-family: "Arboria";
+    src: url("https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Assets/Fonts/Arboria-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: "Arboria";
+    src: url("https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Assets/Fonts/Arboria-Book.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: "Arboria";
+    src: url("https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Assets/Fonts/Arboria-BookItalic.otf") format("opentype");
+    font-weight: 400;
+    font-style: italic;
+  }
+  
+  #jt-root *,
+  #jt-root *::before,
+  #jt-root *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #jt-root {
+	max-width: 1100px;
+    margin: 0 auto;
+    font-family: "Calibri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    color: #111820;
+    line-height: 1.5;
+
+    /* Brand palette */
+    --primary:        #005490;
+    --primary-light:  #0099DC;
+    --primary-xlight: #e6f4fb;
+    --accent-orange:  #ff8632;
+    --accent-yellow:  #eec067;
+    --accent-sky:     #51ceff;
+
+    /* Neutrals */
+    --ink:       #000000;
+    --ink-mid:   #000000;
+    --ink-soft:  #000000;
+    --ink-faint: #000000;
+    --border:    #d0dbe6;
+    --bg:        #ffffff;
+    --bg-soft:   #f4f7fa;
+    --bg-hover:  #e8f2fa;
+
+    /* Badge colours mapped to palette */
+    --waiver-color:   #000000;
+    --waiver-bg:      #eec067;
+    --waiver-border:  #ff8632;
+    --discount-color: #000000;
+    --discount-bg:    #fce8d5;
+    --discount-border:#f5a86a;
+    --discount:       #7a3d00;
+    --discount-light: #fff1e6;
+    --none:           #637486;
+    --none-light:     #f0f3f6;
+    --drawer-border:  #b8cfe0;
+  }
+
+  /* ---- Header ---- */
+  #jt-header {
+    background: var(--primary);
+    border-radius: 8px 8px 0 0;
+    padding: 16px 22px 28px;
+    margin-bottom: 0;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #jt-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+    margin-bottom: 8px;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #jt-header p {
+    font-size: 14px;
+    color: #ffffff;
+    /*opacity: 0.9;*/
+  }
+
+  /* ---- Guided filters ---- */
+  #jt-filters {
+    background: var(--primary);
+    padding: 20px 22px 20px;
+    margin-bottom: 20px;
+    border-radius: 0 0 8px 8px;
+  }
+  #jt-steps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 24px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 750px) {
+    #jt-steps-grid { grid-template-columns: 1fr; }
+  }
+  .jt-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .jt-step-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-sky);
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 20px;
+  }
+  .jt-step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+  .jt-filter-label {
+    font-size: 11px;
+	font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: #ffffff !important;
+    font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  #jt-filters select,
+  #jt-filters input[type="text"] {
+    width: 100%;
+	height: 38px;
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 5px;
+    background: rgba(255,255,255,0.12);
+    color: #ffffff;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  #jt-filters input[type="text"]::placeholder { color: rgba(255,255,255,0.45); }
+  #jt-filters select option { background: #005490; color: #fff; }
+  #jt-filters select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2351ceff'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+  #jt-filters select:focus,
+  #jt-filters input[type="text"]:focus {
+    border-color: var(--accent-sky);
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 0 0 3px rgba(81,206,255,0.2);
+  }
+  #jt-elig-filter { display: flex; flex-direction: row; gap: 16px; align-items: center; }
+  .jt-check-row { 
+	display: flex; 
+	gap: 16px; 
+	flex-wrap: wrap; 
+	padding-top: 4px; 
+	}
+  .jt-check-label {
+    display: flex; 
+	align-items: center; 
+	gap: 6px;
+    font-size: 13px; 
+	color: rgba(255,255,255,0.85);
+    cursor: pointer; 
+	user-select: none; 
+	white-space: nowrap;
+  }
+  .jt-check-label input[type="checkbox"] {
+    width: 15px; 
+	height: 15px;
+    accent-color: var(--accent-sky); 
+	cursor: pointer; 
+	margin-left: 8px !important;
+  }
+  .jt-check-box-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 5px;
+    background: rgba(255,255,255,0.12);
+    width: 100%;
+  }
+  #jt-reset-btn {
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.15s;
+	height: 38px;
+    width: 100%;
+  }
+  #jt-reset-btn:hover { background: rgba(255,255,255,0.4); color: #fff; }
+
+
+    /* ---- Results meta bar ---- */
+  #jt-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #jt-count { font-size: 13px; color: var(--ink-soft); margin-left: 8px !important;}
+  #jt-count strong { color: var(--ink); }
+  
+  .jt-meta-empty {
+    color: var(--ink-faint);
+    font-style: normal;
+  }
+  .jt-meta-extra { display: none !important; }
+  .jt-journal-row.open .jt-meta-extra { display: flex !important; }
+
+  /* ---- Journal rows ---- */
+  .jt-journal-row {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .jt-journal-row:hover {
+    border-color: var(--primary-light);
+    border-left-color: var(--primary-light);
+    box-shadow: 0 2px 8px rgba(0,84,144,0.08);
+  }
+  .jt-journal-row.open {
+    border-color: var(--primary);
+    border-left-color: var(--primary);
+    box-shadow: 0 2px 10px rgba(0,84,144,0.1);
+    grid-column: 1 / -1;
+    display: block;
+  }
+
+  .jt-row-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px 14px 24px;
+    cursor: pointer;
+    background: var(--bg);
+    transition: background 0.1s;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-row-header:hover { background: var(--bg-hover); }
+  .jt-journal-row.open .jt-row-header { background: var(--bg-soft); }
+
+  /* Title + compact inline meta */
+  .jt-row-main { display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    min-width: 0;
+    justify-content: space-between;
+  }
+
+.jt-row-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    line-height: 1.3;
+	padding-left: 12px !important;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-journal-row:hover .jt-row-title,
+  .jt-journal-row.open .jt-row-title { color: var(--primary-light); }
+
+  /* Metadata as inline chips instead of a list */
+  .jt-meta-list {
+    list-style: none;
+    padding-left: 12px !important;
+    display: flex;
+    flex-direction: column;*/
+    gap: 6px;
+  }
+  .jt-meta-list li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+	margin-bottom: 10px !important;
+	font-family: "Calibri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-meta-list li:last-child {
+    margin-bottom: 8 !important;
+  }
+  .jt-meta-list li span.jt-meta-label {
+    color: var(--ink-mid);
+    font-weight: 600;
+	font-family: "Calibri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 14px;
+  }
+  .jt-issn-val {
+    font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    color: var(--ink-mid);
+  }
+
+  /* Right-side badges area */
+  .jt-row-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+  .jt-badges-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  /* Badges */
+  .jt-badge {
+    display: inline-flex;
+    align-items: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px !important;
+	margin-right: 8px !important;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.1px;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-badge-waiver   { background: var(--waiver-bg);   color: var(--waiver-color);   border: 1px solid var(--waiver-border); }
+  .jt-badge-discount { background: var(--discount-bg); color: var(--discount-color); border: 1px solid var(--discount-border); }
+  .jt-badge-discount { background: #e4b2e4; color: #000000; border: 1px solid #e072e0; }
+  .jt-badge-none     { background: var(--none-light);     color: #000000;     border: 1px solid #c8d5e0; }
+
+  .jt-chevron {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    color: var(--primary);
+    padding: 6px;
+    transition: transform 0.2s, color 0.15s, background 0.15s;
+	align-self: flex-end;
+	margin-right: 10px !important;
+  }
+  .jt-journal-row:hover .jt-chevron { color: var(--primary-light); }
+  .jt-journal-row.open .jt-chevron  { transform: rotate(180deg); color: var(--primary); }
+
+  /* ---- Drawer ---- */
+  .jt-drawer {
+    display: none;
+    border-top: 2px solid var(--primary);
+    background: var(--bg-soft);
+    padding: 16px 24px 16px 24px;
+  }
+  .jt-journal-row.open .jt-drawer { display: block; }
+
+  .jt-drawer-columns {
+    display: block;
+    width: 100%;
+  }
+
+  .jt-drawer-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--primary);
+    margin-bottom: 10px !important;
+	margin-top: 10px !important;
+	padding-left: 12px !important;
+	text-decoration: underline;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-drawer-meta {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+  }
+  .jt-drawer-meta-item {
+    font-size: 12px;
+    color: var(--ink-mid);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .jt-elig-block {
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    padding: 24px 18px;
+    margin: 8px !important;
+    box-shadow: 4px 4px 12px rgba(0,84,144,0.18);
+    min-width: 220px;
+	min-height: 175px;
+  }
+  .jt-elig-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--accent-sky);
+    margin-bottom: 4px;
+	margin: 8px !important;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-elig-inst-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 6px !important;
+	margin-top: 2px !important;
+    letter-spacing: -0.2px;
+	margin-left: 8px !important;
+	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .jt-elig-grid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .jt-elig-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 90px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 8px 12px;
+  }
+  .jt-elig-item-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--primary-light);
+    font-weight: 700;
+	margin-left: 8px !important;
+  }
+  .jt-pill {
+    font-size: 16px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+	margin-left: 8px !important;
+  }
+  .jt-pill-yes-waiver   { background: none; color: var(--waiver-border);   border: none; }
+  .jt-pill-yes-discount { background: none; color: var(--discount-border); border: none; }
+  .jt-pill-yes-discount { background: none; color: #e072e0; border: none; }
+  .jt-pill-no           { background: none; color: var(--none-light);     border: none; }
+  
+  .jt-elig-message {
+    font-size: 16px;
+    color: var(--ink-mid);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-style: italic;
+    line-height: 1.5;
+	margin-left: 8px !important;
+  }
+
+  .jt-no-inst {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* All institutions table */
+  /* ---- Pagination ---- */
+  #jt-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .jt-page-btn {
+    padding: 5px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink-mid);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    min-width: 36px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .jt-page-btn:hover { background: var(--bg-hover); border-color: var(--primary-light); color: var(--primary); }
+  .jt-page-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: default;
+  }
+  .jt-page-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+  .jt-page-ellipsis { font-size: 13px; color: var(--ink-faint); padding: 0 3px; }
+
+  /* ---- Journal card grid ---- */
+  #jt-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+  @media (max-width: 700px) {
+    #jt-list { grid-template-columns: 1fr; }
+  }
+  .jt-journal-row { display: flex; flex-direction: column; }
+  .jt-row-header { flex: 1; min-height: 150px; }
+  .jt-journal-row.open { grid-column: 1 / -1; display: block; }
+
+  /* ---- Empty / loading / error ---- */
+  #jt-empty {
+    display: none;
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  #jt-loading {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  #jt-error {
+    display: none;
+    background: #fff5f5;
+    border: 1px solid #fcc;
+    border-radius: 5px;
+    padding: 14px;
+    color: #c53030;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  #jt-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  #jt-logo {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+	margin-top: -100px;
+  }
+</style>
+
+<div id="jt-root">
+
+  <div id="jt-header">
+    <div id="jt-header-inner">
+      <div>
+        <h2>CAUL 2026 Open Access Title List</h2>
+        <p>Using the dropdown menus, select your institution to discover journals where you <br>can publish OA at no cost to you. <br> 
+		<br>You can also filter by publisher, or use the search option to find specific journals.
+		<br>
+		<br>Please note: Not every journal includes an identified Field of Research, so using this filter may not show every journal in that category.</p>
+      </div>
+      <img id="jt-logo" src="https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Assets/Images/Final%20logo%20CAUL-13.png" alt="Logo" />
+    </div>
+  </div>
+
+  <div id="jt-error"></div>
+  <div id="jt-loading">Loading journal list…</div>
+
+  <div id="jt-main" style="display:none">
+
+    <!-- Guided filters — 2 column step layout -->
+    <div id="jt-filters">
+      <div id="jt-steps-grid">
+
+        <div class="jt-step">
+          <div class="jt-step-number">1</div>
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-sel-inst">Your institution</label>
+            <select id="jt-sel-inst"><option value="">— Select institution —</option></select>
+          </div>
+        </div>
+
+        <div class="jt-step">
+          <div class="jt-step-number">2</div>
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-sel-type">Journal type</label>
+            <select id="jt-sel-type"><option value="">All types</option></select>
+          </div>
+        </div>
+
+        <div class="jt-step">
+          <div class="jt-step-number">3</div>
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-sel-publisher">Agreement</label>
+            <select id="jt-sel-publisher"><option value="">All agreements</option></select>
+          </div>
+        </div>
+
+        <div class="jt-step">
+          <div class="jt-step-number">4</div>
+          <div class="jt-step-content">
+            <span class="jt-filter-label">OA eligibility</span>
+            <div class="jt-check-box-wrapper">
+              <label class="jt-check-label"><input type="checkbox" id="jt-chk-waiver" /> APC Waiver</label>
+              <label class="jt-check-label"><input type="checkbox" id="jt-chk-discount" /> APC Discount</label>
+            </div>
+          </div>
+        </div>
+
+		<div class="jt-step">
+		  <div class="jt-step-number">5</div>
+		  <div class="jt-step-content">
+           <label class="jt-filter-label" for="jt-search">Multi Search</label>
+           <input type="text" id="jt-search" placeholder="Search by Title, ISSN, Field of Research…" autocomplete="off" />
+          </div>
+         </div>
+		
+		<div class="jt-step">
+		  <div class="jt-step-number">6</div>
+		  <div class="jt-step-content">
+          <label class="jt-filter-label" for="jt-reset-btn;">Reset Filters</label>
+          <button id="jt-reset-btn">Reset</button>
+        </div>
+	  </div>
+    </div>
+	  
+   </div>
+
+
+
+    <!-- Results -->
+    <div id="jt-results">
+      <div id="jt-meta"><span id="jt-count"></span></div>
+      <div id="jt-list"></div>
+      <div id="jt-empty">No journals match your filters.</div>
+      <div id="jt-pagination"></div>
+    </div>
+
+  </div><!-- /main -->
+
+</div><!-- /root -->
+
+<script>
+(function () {
+  // ── CONFIG ───────────────────────────────────────────────────────────────
+  // Update this URL to wherever you host title_list.json
+  const DATA_URL   = "https://raw.githubusercontent.com/CAUL-Office/CAUL_Title_List/main/Data/title_list.json";
+  const PAGE_SIZE  = 25;
+  // ─────────────────────────────────────────────────────────────────────────
+
+  let allJournals  = [];
+  let openDrawer   = null;
+  let currentPage  = 1;
+
+  const elLoading  = document.getElementById("jt-loading");
+  const elError    = document.getElementById("jt-error");
+  const elMain     = document.getElementById("jt-main");
+  const elList     = document.getElementById("jt-list");
+  const elEmpty    = document.getElementById("jt-empty");
+  const elCount    = document.getElementById("jt-count");
+  const elPager    = document.getElementById("jt-pagination");
+  const selInst    = document.getElementById("jt-sel-inst");
+  const selPub     = document.getElementById("jt-sel-publisher");
+  const selJType   = document.getElementById("jt-sel-type");
+  const inpSearch  = document.getElementById("jt-search");
+  const chkWaiver   = document.getElementById("jt-chk-waiver");
+  const chkDiscount = document.getElementById("jt-chk-discount");
+  const btnReset   = document.getElementById("jt-reset-btn");
+  const selFor     = document.getElementById("jt-sel-for");
+
+  // ── LOAD DATA ─────────────────────────────────────────────────────────────
+  fetch(DATA_URL)
+    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(data => {
+      allJournals = data.journals;
+      window._instNames = data.inst_names || [];
+      populateFilters(data);
+      elLoading.style.display = "none";
+      elMain.style.display    = "block";
+      render();
+    })
+    .catch(err => {
+      elLoading.style.display = "none";
+      elError.style.display   = "block";
+      elError.textContent     = "Could not load journal list. Please try again later. (" + err.message + ")";
+    });
+
+  // ── POPULATE DROPDOWNS ────────────────────────────────────────────────────
+  function populateFilters(data) {
+    // inst_names lookup: institution names stored once, referenced by index
+    const instNames = data.inst_names || [];
+    window._instNames = instNames;
+    const institutions = [...new Set(
+      data.journals.flatMap(j =>
+        j.institutions
+          .filter(i => i[1] > 0)
+          .map(i => instNames[i[0]])
+      )
+    )].sort();
+
+    const publishers = [...new Set(
+      data.journals.map(j => j.agreement).filter(Boolean)
+    )].sort();
+
+    const journalTypes = [...new Set(data.journals.map(j => j.journal_type).filter(Boolean))].sort();
+
+    institutions.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      selInst.appendChild(opt);
+    });
+
+    publishers.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      selPub.appendChild(opt);
+    });
+
+    journalTypes.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      selJType.appendChild(opt);
+    });
+	
+  }
+
+  // ── FILTER LOGIC ──────────────────────────────────────────────────────────
+  function getFiltered() {
+    const instNames   = allJournals.length ? (window._instNames || []) : [];
+    const inst        = selInst.value;
+    const pub         = selPub.value;
+    const query       = inpSearch.value.trim().toLowerCase();
+    const wantWaiver   = chkWaiver.checked;
+    const wantDiscount = chkDiscount.checked;
+    const anyElig      = wantWaiver || wantDiscount;
+
+    return allJournals.filter(j => {
+      if (query) {
+        const q = query.toLowerCase();
+        const matches =
+          (j.journal_title  && j.journal_title.toLowerCase().includes(q))  ||
+          (j.subject_area   && j.subject_area.toLowerCase().includes(q))    ||
+          (j.issn_print     && j.issn_print.includes(q))                    ||
+          (j.issn_online    && j.issn_online.includes(q))                   ||
+          (j.publisher      && j.publisher.toLowerCase().includes(q))       ||
+          (j.journal_type   && j.journal_type.toLowerCase().includes(q));
+        if (!matches) return false;
+      }
+      if (pub && j.agreement !== pub) return false;
+      if (selJType.value && j.journal_type !== selJType.value) return false;
+      if (inst || anyElig) {
+        const instData = inst
+          ? j.institutions.filter(i => instNames[i[0]] === inst)
+          : j.institutions;
+        if (inst && instData.length === 0) return false;
+        if (inst) {
+          const hasEligibility = instData.some(i => (i[1] & 1) || (i[1] & 2)); // waiver=1, discount=2
+          if (!hasEligibility) return false;
+        }
+        if (anyElig) {
+          const match = instData.some(i =>
+            (wantWaiver   && (i[1] & 1)) ||
+            (wantDiscount && (i[1] & 2))
+          );
+          if (!match) return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  // ── BADGE HELPERS ─────────────────────────────────────────────────────────
+  function badgesForInstitution(i) {
+    const out = [];
+    if (iWaiver(i))   out.push('<span class="jt-badge jt-badge-waiver">APC Waiver</span>');
+    if (iDiscount(i)) out.push('<span class="jt-badge jt-badge-discount">APC Discount</span>');
+    if (iNoCov(i))    out.push('<span class="jt-badge jt-badge-none">No APC Coverage</span>');
+    if (!i[1])
+      out.push('<span class="jt-badge jt-badge-none">Not eligible</span>');
+    return out.join("");
+  }
+
+  function summaryBadges(journal) {
+    const insts = journal.institutions;
+    const out   = [];
+    const hasWaiver   = insts.some(i => i[1] & 1);
+    const hasDiscount = insts.some(i => i[1] & 2);
+    if (hasWaiver)   out.push('<span class="jt-badge jt-badge-waiver">APC Waiver</span>');
+    if (hasDiscount) out.push('<span class="jt-badge jt-badge-discount">APC Discount</span>');
+    if (!hasWaiver && !hasDiscount) out.push('<span class="jt-badge jt-badge-none">No APC Coverage</span>');
+    return out.join("");
+  }
+
+  function pillFor(flag, type) {
+    if (flag) {
+      const cls = type === "waiver" ? "jt-pill-yes-waiver" : "jt-pill-yes-discount";
+      return '<span class="jt-pill ' + cls + '">Yes</span>';
+    }
+    return '<span class="jt-pill jt-pill-no">No</span>';
+  }
+
+  // ── DRAWER HTML ───────────────────────────────────────────────────────────
+  function drawerHTML(journal) {
+    const inst = selInst.value;
+    let html = '';
+    if (inst) html += '<p class="jt-drawer-title">Read &amp; Publish Agreement eligibility</p>';
+    html += '<div class="jt-drawer-columns">';
+
+    if (inst) {
+      const iData = journal.institutions.find(i => window._instNames[i[0]] === inst);
+      if (!iData) {
+        html += '<p class="jt-no-inst">Your institution has no recorded agreement for this journal.</p>';
+      } else {
+        html += '<div class="jt-elig-block">';
+        html += '<p class="jt-elig-eyebrow">Your institution</p>';
+        html += '<p class="jt-elig-inst-name">' + escHtml(inst) + '</p>';
+        html += '<div class="jt-elig-grid">';
+        html += '<div class="jt-elig-item"><span class="jt-elig-item-label">APC Waiver</span>'   + pillFor(iWaiver(iData),   "waiver")   + '</div>';
+        html += '<div class="jt-elig-item"><span class="jt-elig-item-label">APC Discount</span>' + pillFor(iDiscount(iData), "discount") + '</div>';
+        html += '<div class="jt-elig-item"><span class="jt-elig-item-label">No APC Coverage</span>' + pillFor(iNoCov(iData), "none") + '</div>';
+        html += '</div>';
+        if (iWaiver(iData)) {
+          html += '<p class="jt-elig-message">Your institution is eligible to publish open access in this journal at no cost to you.</p>';
+        } else if (iDiscount(iData)) {
+          html += '<p class="jt-elig-message">Your institution is eligible to publish open access in this journal at a discounted APC fee.</p>';
+        } else if (iNoCov(iData)) {
+          html += '<p class="jt-elig-message">Your institution does not have APC coverage for this journal under a Read &amp; Publish Agreement.</p>';
+        }
+        html += '</div>';
+      }
+    }
+
+    html += '<div class="jt-drawer-meta">';    
+    html += '</div>';
+    html += '</div>'; // close jt-drawer-columns
+    return html;
+  }
+
+  // ── ROW HTML ──────────────────────────────────────────────────────────────
+  function rowHTML(j) {
+    const isOpen   = openDrawer === j.id;
+    const inst     = selInst.value;
+    const instRow  = inst ? j.institutions.find(i => window._instNames[i[0]] === inst) : null;
+    const badges   = instRow ? badgesForInstitution(instRow) : summaryBadges(j);
+
+    // Build metadata list items
+    const empty = '<span class="jt-meta-empty">-</span>';
+    const metaItems = [];
+    metaItems.push(`<span class="jt-meta-label">Publisher:</span> ${j.publisher ? escHtml(j.publisher) : empty}`);
+    metaItems.push(`<span class="jt-meta-label">Journal Type:</span> ${j.journal_type ? escHtml(j.journal_type) : empty}`);
+    metaItems.push(`<span class="jt-meta-label">Field of Research:</span> ${j.subject_area ? escHtml(j.subject_area) : empty}`);
+    const issnVal = j.issn_print ? `<span class="jt-issn-val">${escHtml(j.issn_print)}</span>` : empty;
+    const eissnVal = j.issn_online && j.issn_online !== j.issn_print ? `<span class="jt-issn-val">${escHtml(j.issn_online)}</span>` : empty;
+    const linkVal = j.website ? `<a href="${escHtml(j.website)}" target="_blank" rel="noopener noreferrer">Visit journal</a>` : empty;
+    const issnItem = `<span class="jt-meta-label">ISSN:</span> ${issnVal}`;
+    const eissnItem = `<span class="jt-meta-label">eISSN:</span> ${eissnVal}`;
+    const linkItem = `<span class="jt-meta-label">Journal link:</span> ${linkVal}`;
+
+    const metaList = metaItems.length
+      ? '<ul class="jt-meta-list">' + metaItems.map(m => `<li>${m}</li>`).join("") + '</ul>'
+      : "";
+    const extraList = '<ul class="jt-meta-list jt-meta-extra">'
+      + [issnItem, eissnItem, linkItem].map(m => `<li>${m}</li>`).join("")
+      + '</ul>';
+
+    return `
+      <div class="jt-journal-row${isOpen ? " open" : ""}" data-id="${j.id}">
+        <div class="jt-row-header" role="button" tabindex="0"
+             aria-expanded="${isOpen}" aria-controls="jt-drawer-${j.id}">
+          <div class="jt-row-main">
+            <span class="jt-row-title">${escHtml(j.journal_title)}</span>
+            ${metaList}
+            ${extraList}
+          </div>
+          <div class="jt-row-right">
+            <div class="jt-badges-row">${badges}</div>
+            <svg class="jt-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                 stroke-width="2" aria-hidden="true">
+              <polyline points="4,7 10,13 16,7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="jt-drawer" id="jt-drawer-${j.id}" role="region">
+          ${isOpen ? drawerHTML(j) : ""}
+        </div>
+      </div>`;
+  }
+
+  // ── PAGINATION ────────────────────────────────────────────────────────────
+  function renderPager(total, page) {
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    if (totalPages <= 1) { elPager.innerHTML = ""; return; }
+
+    let html = "";
+
+    // Prev button
+    html += `<button class="jt-page-btn" id="jt-prev" ${page === 1 ? "disabled" : ""}>&#8592;</button>`;
+
+    // Page number buttons with ellipsis
+    const pages = [];
+    for (let p = 1; p <= totalPages; p++) {
+      if (p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2)) {
+        pages.push(p);
+      }
+    }
+
+    let prev = null;
+    pages.forEach(p => {
+      if (prev !== null && p - prev > 1) {
+        html += '<span class="jt-page-ellipsis">…</span>';
+      }
+      html += `<button class="jt-page-btn${p === page ? " active" : ""}" data-page="${p}">${p}</button>`;
+      prev = p;
+    });
+
+    // Next button
+    html += `<button class="jt-page-btn" id="jt-next" ${page === totalPages ? "disabled" : ""}>&#8594;</button>`;
+
+    elPager.innerHTML = html;
+
+    elPager.querySelectorAll(".jt-page-btn[data-page]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const p = parseInt(btn.dataset.page, 10);
+        if (p !== currentPage) { currentPage = p; openDrawer = null; render(); scrollToTop(); }
+      });
+    });
+
+    const prevBtn = document.getElementById("jt-prev");
+    const nextBtn = document.getElementById("jt-next");
+    if (prevBtn) prevBtn.addEventListener("click", () => { currentPage--; openDrawer = null; render(); scrollToTop(); });
+    if (nextBtn) nextBtn.addEventListener("click", () => { currentPage++; openDrawer = null; render(); scrollToTop(); });
+  }
+
+  function scrollToTop() {
+    const root = document.getElementById("jt-root");
+    if (root) root.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ── RENDER ────────────────────────────────────────────────────────────────
+  function render() {
+    const filtered   = getFiltered();
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+    // Clamp page to valid range
+    if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page  = filtered.slice(start, start + PAGE_SIZE);
+
+    elCount.innerHTML = '<strong>' + filtered.length + '</strong> journal' +
+      (filtered.length !== 1 ? 's' : '') +
+      (selInst.value ? ' for <strong>' + escHtml(selInst.value) + '</strong>' : '') +
+      (totalPages > 1 ? ' &nbsp;·&nbsp; page ' + currentPage + ' of ' + totalPages : '');
+
+    elEmpty.style.display = filtered.length === 0 ? "block" : "none";
+
+    elList.innerHTML = page.map(rowHTML).join("");
+
+    elList.querySelectorAll(".jt-row-header").forEach(header => {
+      header.addEventListener("click", onRowClick);
+      header.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowClick(e); }
+      });
+    });
+
+    renderPager(filtered.length, currentPage);
+  }
+
+  function onRowClick(e) {
+    const row    = e.currentTarget.closest(".jt-journal-row");
+    const id     = parseInt(row.dataset.id, 10);
+    const wasOpen= row.classList.contains("open");
+
+    document.querySelectorAll(".jt-journal-row.open").forEach(r => {
+      r.classList.remove("open");
+      r.querySelector(".jt-row-header").setAttribute("aria-expanded", "false");
+      r.querySelector(".jt-drawer").innerHTML = "";
+    });
+
+    if (!wasOpen) {
+      row.classList.add("open");
+      row.querySelector(".jt-row-header").setAttribute("aria-expanded", "true");
+      row.querySelector(".jt-drawer").innerHTML = drawerHTML(allJournals.find(j => j.id === id));
+      openDrawer = id;
+    } else {
+      openDrawer = null;
+    }
+  }
+
+  // ── EVENTS ────────────────────────────────────────────────────────────────
+  [selInst, selPub, selJType, chkWaiver, chkDiscount].forEach(el => {
+    el.addEventListener("change", () => { currentPage = 1; openDrawer = null; render(); });
+  });
+
+  let searchTimer;
+  inpSearch.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { currentPage = 1; openDrawer = null; render(); }, 180);
+  });
+
+  btnReset.addEventListener("click", () => {
+    selInst.value = selPub.value = selJType.value = inpSearch.value = "";
+    chkWaiver.checked = chkDiscount.checked = false;
+    currentPage = 1; openDrawer = null; render();
+  });
+
+  // ── UTILS ─────────────────────────────────────────────────────────────────
+  // Institution is now [index, flags] where flags is bitmask: w=1, d=2, nc=4
+  function iWaiver(i)   { return !!(i[1] & 1); }
+  function iDiscount(i) { return !!(i[1] & 2); }
+  function iNoCov(i)    { return !!(i[1] & 4); }
+	
+
+  function escHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+})();
+</script>
