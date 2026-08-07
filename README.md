@@ -18,7 +18,7 @@ Journal information is maintained by CAUL and updated in the excel spreadsheet u
 This data is then converted to a JSON file using a python script in the 'Scripts' folder.
 The widget uses the data in the JSON as the data source. When this is updated, the data in the widget will automatically update.
 
-### For Institution's
+### For Institutions
 The title list widget is free to use and placed in any location at your convenience. The code is HTML and can be embedded with no technical experience required. 
 You can download the widget file directly from this repository:
 1. Navigate to Widget/caul_title_list_widget.html
