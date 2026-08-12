@@ -138,7 +138,8 @@
     gap: 12px;
   }
   .jt-step-number {
-    width: 26px;
+    /* -- Commenting out this code in case we want to re-add it. --
+	width: 26px;
     height: 26px;
     border-radius: 50%;
     background: var(--accent-sky);
@@ -150,6 +151,8 @@
     justify-content: center;
     flex-shrink: 0;
     margin-top: 20px;
+	*/
+	display: none;
   }
   .jt-step-content {
     display: flex;
@@ -180,8 +183,11 @@
     outline: none;
     transition: border-color 0.15s, background 0.15s;
   }
-  #jt-filters input[type="text"]::placeholder { color: rgba(255,255,255,0.45); }
-  #jt-filters select option { background: #005490; color: #fff; }
+  #jt-filters input[type="text"]::placeholder { color: rgba(255,255,255,0.95) !important; }
+  #jt-filters select option { background: #005490; color: #ffffff; }
+  #jt-search {
+    color: rgba(255,255,255,0.6);
+  }
   #jt-filters select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2351ceff'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -658,7 +664,7 @@
         <div class="jt-step">
           <div class="jt-step-number">3</div>
           <div class="jt-step-content">
-            <label class="jt-filter-label" for="jt-sel-publisher">Agreement</label>
+            <label class="jt-filter-label" for="jt-sel-publisher">Publisher</label>
             <select id="jt-sel-publisher"><option value="">All agreements</option></select>
           </div>
         </div>
