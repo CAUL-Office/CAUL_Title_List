@@ -252,7 +252,37 @@
   #jt-reset-btn:hover { background: rgba(255,255,255,0.4); color: #fff; }
 
 
-    /* ---- Results meta bar ---- */
+    /* ---- More filters ---- */
+  #jt-filter-toggle {
+    padding: 8px 22px 0;
+  }
+  #jt-adv-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    letter-spacing: 0.3px;
+    transition: color 0.15s;
+  }
+  #jt-adv-btn:hover { color: var(--accent-sky); }
+  #jt-filter-panel {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding: 14px 22px 6px;
+    margin-top: 10px;
+  }
+  #jt-adv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 24px;
+  }
+  @media (max-width: 600px) {
+    #jt-adv-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---- Results meta bar ---- */
   #jt-meta {
     display: flex;
     align-items: center;
@@ -390,10 +420,13 @@
     letter-spacing: 0.1px;
 	font-family: "Arboria", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
-  .jt-badge-waiver   { background: var(--waiver-bg);   color: var(--waiver-color);   border: 1px solid var(--waiver-border); }
+  
+  .jt-badge-waiver   { background: #aad75e;   color: var(--waiver-color);   border: 1px solid #74ecac; }
   .jt-badge-discount { background: var(--discount-bg); color: var(--discount-color); border: 1px solid var(--discount-border); }
   .jt-badge-discount { background: #e4b2e4; color: #000000; border: 1px solid #e072e0; }
   .jt-badge-none     { background: var(--none-light);     color: #000000;     border: 1px solid #c8d5e0; }
+  .jt-badge-hybrid  { background: #d4f1ff; color: #000000; border: 1px solid #51ceff; }
+  .jt-badge-fullyoa { background: #EFBF04; color: #000000; border: 1px solid var(--waiver-border); }
 
   .jt-chevron {
     flex-shrink: 0;
@@ -526,12 +559,18 @@
     font-style: italic;
     line-height: 1.5;
 	margin-left: 8px !important;
+	line-height: 50px !important;
   }
 
   .jt-no-inst {
     font-size: 13px;
     color: var(--ink-soft);
     font-style: italic;
+  }
+  
+  .jt-elig-divider {
+    border-top: 1px solid rgba(255,255,255,0.25);
+    margin: 10px 0;
   }
 
   /* All institutions table */
@@ -579,7 +618,7 @@
     #jt-list { grid-template-columns: 1fr; }
   }
   .jt-journal-row { display: flex; flex-direction: column; }
-  .jt-row-header { flex: 1; min-height: 150px; }
+  .jt-row-header { flex: 1; min-height: 125px; }
   .jt-journal-row.open { grid-column: 1 / -1; display: block; }
 
   /* ---- Empty / loading / error ---- */
@@ -619,6 +658,20 @@
     flex-shrink: 0;
 	margin-top: -125px;
   }
+  
+  #jt-export-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #jt-export-btn:hover { background: var(--bg-hover); }
+  
 </style>
 
 <div id="jt-root">
@@ -696,14 +749,47 @@
         </div>
 	  </div>
     </div>
-	  
+
+    <!-- More filters toggle -->
+    <div id="jt-filter-toggle">
+      <button id="jt-adv-btn">&#9660; More filters</button>
+    </div>
+
+    <!-- More filters panel -->
+    <div id="jt-filter-panel" style="display:none">
+      <div id="jt-adv-grid">
+
+        <div class="jt-step">
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-sel-for">Field of research</label>
+            <select id="jt-sel-for"><option value="">All fields</option></select>
+          </div>
+        </div>
+
+        <div class="jt-step">
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-adv-issn">ISSN / eISSN</label>
+            <input type="text" id="jt-adv-issn" placeholder="e.g. 1234-5678" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="jt-step">
+          <div class="jt-step-content">
+            <label class="jt-filter-label" for="jt-sel-imprint">Imprint</label>
+            <select id="jt-sel-imprint"><option value="">All imprints</option></select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
    </div>
 
 
 
     <!-- Results -->
     <div id="jt-results">
-      <div id="jt-meta"><span id="jt-count"></span></div>
+      <div id="jt-meta"><span id="jt-count"></span><button id="jt-export-btn">Export CSV</button></div>
       <div id="jt-list"></div>
       <div id="jt-empty">No journals match your filters.</div>
       <div id="jt-pagination"></div>
@@ -740,6 +826,11 @@
   const chkDiscount = document.getElementById("jt-chk-discount");
   const btnReset   = document.getElementById("jt-reset-btn");
   const selFor     = document.getElementById("jt-sel-for");
+  const selImprint = document.getElementById("jt-sel-imprint");
+  const inpISSN    = document.getElementById("jt-adv-issn");
+  const btnAdv     = document.getElementById("jt-adv-btn");
+  const elAdvPanel = document.getElementById("jt-filter-panel");
+  const btnExport  = document.getElementById("jt-export-btn");
 
   // ── LOAD DATA ─────────────────────────────────────────────────────────────
   fetch(DATA_URL)
@@ -794,7 +885,21 @@
       opt.value = name; opt.textContent = name;
       selJType.appendChild(opt);
     });
-	
+
+    const fields = [...new Set(data.journals.map(j => j.subject_area).filter(Boolean))].sort();
+    fields.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      selFor.appendChild(opt);
+    });
+
+    const imprints = [...new Set(data.journals.map(j => j.imprint).filter(Boolean))].sort();
+    imprints.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name; opt.textContent = name;
+      selImprint.appendChild(opt);
+    });
+
   }
 
   // ── FILTER LOGIC ──────────────────────────────────────────────────────────
@@ -821,6 +926,15 @@
       }
       if (pub && j.agreement !== pub) return false;
       if (selJType.value && j.journal_type !== selJType.value) return false;
+      if (selFor.value && j.subject_area !== selFor.value) return false;
+      if (selImprint.value && j.imprint !== selImprint.value) return false;
+      if (inpISSN.value) {
+        const issnQ = inpISSN.value.trim().toLowerCase();
+        const issnMatch =
+          (j.issn_print  && j.issn_print.toLowerCase().includes(issnQ)) ||
+          (j.issn_online && j.issn_online.toLowerCase().includes(issnQ));
+        if (!issnMatch) return false;
+      }
       if (inst || anyElig) {
         const instData = inst
           ? j.institutions.filter(i => instNames[i[0]] === inst)
@@ -876,10 +990,17 @@
   function drawerHTML(journal) {
     const inst = selInst.value;
     let html = '';
-    if (inst) html += '<p class="jt-drawer-title">Read &amp; Publish Agreement eligibility</p>';
+    html += '<p class="jt-drawer-title">Read &amp; Publish Agreement eligibility</p>';
     html += '<div class="jt-drawer-columns">';
 
-    if (inst) {
+    if (!inst) {
+      html += '<div class="jt-elig-block">';
+      html += '<p class="jt-elig-eyebrow">Your institution</p>';
+      html += '<p class="jt-elig-inst-name">No institution selected</p>';
+      html += '<div class="jt-elig-divider"></div>';
+      html += '<p class="jt-elig-message">Select your institution using the filter above to check if you are eligible to publish open access in this journal.</p>';
+      html += '</div>';
+    } else {
       const iData = journal.institutions.find(i => window._instNames[i[0]] === inst);
       if (!iData) {
         html += '<p class="jt-no-inst">Your institution has no recorded agreement for this journal.</p>';
@@ -914,14 +1035,18 @@
     const isOpen   = openDrawer === j.id;
     const inst     = selInst.value;
     const instRow  = inst ? j.institutions.find(i => window._instNames[i[0]] === inst) : null;
-    const badges   = instRow ? badgesForInstitution(instRow) : summaryBadges(j);
-
+    const typeClass = j.journal_type && j.journal_type.toLowerCase().includes("hybrid")
+      ? "jt-badge-hybrid"
+      : "jt-badge-fullyoa";
+    const typeBadge = j.journal_type
+      ? `<span class="jt-badge ${typeClass}">${escHtml(j.journal_type)}</span>`
+      : "";
+    const badges    = typeBadge + (instRow ? badgesForInstitution(instRow) : summaryBadges(j));
+	
     // Build metadata list items
     const empty = '<span class="jt-meta-empty">-</span>';
     const metaItems = [];
     metaItems.push(`<span class="jt-meta-label">Publisher:</span> ${j.publisher ? escHtml(j.publisher) : empty}`);
-    metaItems.push(`<span class="jt-meta-label">Journal Type:</span> ${j.journal_type ? escHtml(j.journal_type) : empty}`);
-    metaItems.push(`<span class="jt-meta-label">Field of Research:</span> ${j.subject_area ? escHtml(j.subject_area) : empty}`);
     const issnVal = j.issn_print ? `<span class="jt-issn-val">${escHtml(j.issn_print)}</span>` : empty;
     const eissnVal = j.issn_online && j.issn_online !== j.issn_print ? `<span class="jt-issn-val">${escHtml(j.issn_online)}</span>` : empty;
     const linkVal = j.website ? `<a href="${escHtml(j.website)}" target="_blank" rel="noopener noreferrer">Visit journal</a>` : empty;
@@ -932,8 +1057,9 @@
     const metaList = metaItems.length
       ? '<ul class="jt-meta-list">' + metaItems.map(m => `<li>${m}</li>`).join("") + '</ul>'
       : "";
+	const forItem = `<span class="jt-meta-label">Field of Research:</span> ${j.subject_area ? escHtml(j.subject_area) : empty}`;
     const extraList = '<ul class="jt-meta-list jt-meta-extra">'
-      + [issnItem, eissnItem, linkItem].map(m => `<li>${m}</li>`).join("")
+      + [forItem, issnItem, eissnItem, linkItem].map(m => `<li>${m}</li>`).join("")
       + '</ul>';
 
     return `
@@ -1061,8 +1187,15 @@
   }
 
   // ── EVENTS ────────────────────────────────────────────────────────────────
-  [selInst, selPub, selJType, chkWaiver, chkDiscount].forEach(el => {
+  [selInst, selPub, selJType, chkWaiver, chkDiscount, selFor, selImprint].forEach(el => {
     el.addEventListener("change", () => { currentPage = 1; openDrawer = null; render(); });
+  });
+
+  // More filter toggle
+  btnAdv.addEventListener("click", () => {
+    const isOpen = elAdvPanel.style.display !== "none";
+    elAdvPanel.style.display = isOpen ? "none" : "block";
+    btnAdv.innerHTML = isOpen ? "&#9660; More filters" : "&#9650; More filters";
   });
 
   let searchTimer;
@@ -1071,11 +1204,64 @@
     searchTimer = setTimeout(() => { currentPage = 1; openDrawer = null; render(); }, 180);
   });
 
+  let issnTimer;
+  inpISSN.addEventListener("input", () => {
+    clearTimeout(issnTimer);
+    issnTimer = setTimeout(() => { currentPage = 1; openDrawer = null; render(); }, 180);
+  });
+
   btnReset.addEventListener("click", () => {
     selInst.value = selPub.value = selJType.value = inpSearch.value = "";
     chkWaiver.checked = chkDiscount.checked = false;
+    selFor.value = selImprint.value = inpISSN.value = "";
+    elAdvPanel.style.display = "none";
+    btnAdv.innerHTML = "&#9660; More filters";
     currentPage = 1; openDrawer = null; render();
   });
+  
+  function exportCSV() {
+    const filtered = getFiltered();
+    const inst = selInst.value;
+
+    const headers = [
+      "Journal Title", "Publisher", "Journal Type", "ISSN", "eISSN",
+      "Field of Research", "Agreement", "Notes", "Journal Website",
+      "APC Waiver", "APC Discount", "No APC Coverage"
+    ];
+
+    const rows = filtered.map(j => {
+      let waiver = "", discount = "", nocov = "";
+      if (inst) {
+        const iData = j.institutions.find(i => window._instNames[i[0]] === inst);
+        if (iData) {
+          waiver  = iWaiver(iData)   ? "Yes" : "No";
+          discount = iDiscount(iData) ? "Yes" : "No";
+          nocov   = iNoCov(iData)    ? "Yes" : "No";
+        }
+      } else {
+        waiver   = j.institutions.some(i => i[1] & 1) ? "Yes" : "";
+        discount = j.institutions.some(i => i[1] & 2) ? "Yes" : "";
+        nocov    = j.institutions.some(i => i[1] & 4) ? "Yes" : "";
+      }
+      return [
+        j.journal_title, j.publisher || "", j.journal_type || "",
+        j.issn_print || "", j.issn_online || "", j.subject_area || "",
+        j.agreement || "", j.notes || "", j.website || "",
+        waiver, discount, nocov
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = inst ? `CAUL_Title_List_${inst.replace(/\s+/g, "_")}.csv` : "CAUL_Title_List.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  btnExport.addEventListener("click", exportCSV);
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
   // Institution is now [index, flags] where flags is bitmask: w=1, d=2, nc=4
