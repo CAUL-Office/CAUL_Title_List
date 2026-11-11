@@ -671,6 +671,19 @@
     transition: background 0.15s;
   }
   #jt-export-btn:hover { background: var(--bg-hover); }
+  #jt-meta-actions { display: flex; gap: 6px; }
+  #jt-copylink-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #jt-copylink-btn:hover { background: var(--bg-hover); }
   
 </style>
 
@@ -789,7 +802,7 @@
 
     <!-- Results -->
     <div id="jt-results">
-      <div id="jt-meta"><span id="jt-count"></span><button id="jt-export-btn">Export CSV</button></div>
+      <div id="jt-meta"><span id="jt-count"></span><div id="jt-meta-actions"><button type="button" id="jt-copylink-btn" title="Copy a link to this filtered view">Copy link to this view</button><button type="button" id="jt-export-btn">Export CSV</button></div></div>
       <div id="jt-list"></div>
       <div id="jt-empty">No journals match your filters.</div>
       <div id="jt-pagination"></div>
@@ -831,6 +844,7 @@
   const btnAdv     = document.getElementById("jt-adv-btn");
   const elAdvPanel = document.getElementById("jt-filter-panel");
   const btnExport  = document.getElementById("jt-export-btn");
+  const btnCopy    = document.getElementById("jt-copylink-btn");
 
   // ── LOAD DATA ─────────────────────────────────────────────────────────────
   fetch(DATA_URL)
@@ -839,6 +853,7 @@
       allJournals = data.journals;
       window._instNames = data.inst_names || [];
       populateFilters(data);
+      applyStateFromURL();
       elLoading.style.display = "none";
       elMain.style.display    = "block";
       render();
@@ -1038,8 +1053,10 @@
     const typeClass = j.journal_type && j.journal_type.toLowerCase().includes("hybrid")
       ? "jt-badge-hybrid"
       : "jt-badge-fullyoa";
-    const typeBadge = j.journal_type
-      ? `<span class="jt-badge ${typeClass}">${escHtml(j.journal_type)}</span>`
+    const typeLabels = { "Fully Open Access": "Fully OA" };
+    const typeLabel  = typeLabels[j.journal_type] || j.journal_type;
+    const typeBadge  = j.journal_type
+      ? `<span class="jt-badge ${typeClass}" title="${escHtml(j.journal_type)}">${escHtml(typeLabel)}</span>`
       : "";
     const badges    = typeBadge + (instRow ? badgesForInstitution(instRow) : summaryBadges(j));
 	
@@ -1163,6 +1180,7 @@
     });
 
     renderPager(filtered.length, currentPage);
+    writeStateToURL();
   }
 
   function onRowClick(e) {
@@ -1262,6 +1280,75 @@
   }
 
   btnExport.addEventListener("click", exportCSV);
+
+  // ── URL STATE (bookmarkable / shareable filters) ──────────────────────────
+  // Prefixed with "jt_" so they never clash with URLs own params (g, p, etc.)
+  const URL_KEYS = {
+    inst: "jt_inst", type: "jt_type", pub: "jt_pub", q: "jt_q",
+    waiver: "jt_waiver", discount: "jt_discount",
+    field: "jt_for", imprint: "jt_imprint", issn: "jt_issn", page: "jt_page"
+  };
+
+  // Only set a dropdown if the value still exists (e.g. after a data refresh). This means a bookmark won't break if a publisher or institution is later renamed or removed from the JSON. The filter is just ignored.
+  function setSelectIfValid(sel, val) {
+    if (val && Array.from(sel.options).some(o => o.value === val)) sel.value = val;
+  }
+
+  function applyStateFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    setSelectIfValid(selInst,    params.get(URL_KEYS.inst));
+    setSelectIfValid(selJType,   params.get(URL_KEYS.type));
+    setSelectIfValid(selPub,     params.get(URL_KEYS.pub));
+    setSelectIfValid(selFor,     params.get(URL_KEYS.field));
+    setSelectIfValid(selImprint, params.get(URL_KEYS.imprint));
+    inpSearch.value     = params.get(URL_KEYS.q)    || "";
+    inpISSN.value       = params.get(URL_KEYS.issn) || "";
+    chkWaiver.checked   = params.get(URL_KEYS.waiver)   === "1";
+    chkDiscount.checked = params.get(URL_KEYS.discount) === "1";
+    const pg = parseInt(params.get(URL_KEYS.page), 10);
+    currentPage = pg > 0 ? pg : 1;
+    // Open "More filters" if any advanced filter came from the link
+    if (selFor.value || selImprint.value || inpISSN.value) {
+      elAdvPanel.style.display = "block";
+      btnAdv.innerHTML = "&#9650; More filters";
+    }
+  }
+
+  function writeStateToURL() {
+    // Start from the existing query string so URL params are preserved
+    const params = new URLSearchParams(window.location.search);
+    const state = {};
+    state[URL_KEYS.inst]     = selInst.value;
+    state[URL_KEYS.type]     = selJType.value;
+    state[URL_KEYS.pub]      = selPub.value;
+    state[URL_KEYS.q]        = inpSearch.value.trim();
+    state[URL_KEYS.waiver]   = chkWaiver.checked ? "1" : "";
+    state[URL_KEYS.discount] = chkDiscount.checked ? "1" : "";
+    state[URL_KEYS.field]    = selFor.value;
+    state[URL_KEYS.imprint]  = selImprint.value;
+    state[URL_KEYS.issn]     = inpISSN.value.trim();
+    state[URL_KEYS.page]     = currentPage > 1 ? String(currentPage) : "";
+    Object.keys(state).forEach(k => {
+      if (state[k]) params.set(k, state[k]); else params.delete(k);
+    });
+    const qs = params.toString();
+    const newUrl = window.location.pathname + (qs ? "?" + qs : "") + window.location.hash;
+    try { history.replaceState(null, "", newUrl); } catch (e) { /* ignore if blocked */ }
+  }
+
+  btnCopy.addEventListener("click", () => {
+    writeStateToURL();
+    const url = window.location.href;
+    const done = () => {
+      btnCopy.textContent = "Link copied!";
+      setTimeout(() => { btnCopy.textContent = "Copy link to this view"; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done).catch(() => window.prompt("Copy this link:", url));
+    } else {
+      window.prompt("Copy this link:", url);
+    }
+  });
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
   // Institution is now [index, flags] where flags is bitmask: w=1, d=2, nc=4
